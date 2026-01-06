@@ -4,7 +4,7 @@ AUTO_LOAD = ["sensor", "text_sensor"]
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import uart, sensor, text_sensor
-from esphome.const import CONF_ID, CONF_NAME, UNIT_EMPTY, ENTITY_CATEGORY_DIAGNOSTIC
+from esphome.const import CONF_ID, CONF_NAME, UNIT_EMPTY, ENTITY_CATEGORY_DIAGNOSTIC, CONF_DISABLED_BY_DEFAULT
 
 # Icons/units
 ICON_CUP = "mdi:cup"
@@ -21,11 +21,12 @@ CONF_MODEL = "model"
 
 # Model enum
 MODEL_UNKNOWN = "UNKNOWN"
+MODEL_F50 = "F50"
 MODEL_E6 = "E6"
 MODEL_E8 = "E8"
 MODEL_F6 = "F6"
 MODEL_F7 = "F7"
-MODEL_ENUM = cv.one_of(MODEL_E6, MODEL_E8, MODEL_F6, MODEL_F7, MODEL_UNKNOWN, upper=True)
+MODEL_ENUM = cv.one_of(MODEL_F50, MODEL_E6, MODEL_E8, MODEL_F6, MODEL_F7, MODEL_UNKNOWN, upper=True)
 
 # YAML field keys (unique per entity, used only to anchor IDs)
 F_SINGLE_ESPRESSO       = "single_espresso_made"
@@ -37,7 +38,6 @@ F_DOUBLE_RISTRETTO      = "double_ristretto_made"
 F_CAPPUCCINO            = "cappuccino_made"
 F_FLAT_WHITE            = "flat_white_made"
 F_MILK                  = "milk_portion_made"
-
 
 F_CLEANINGS             = "cleanings_performed"
 F_DESCALINGS            = "descalings_performed"
@@ -53,7 +53,7 @@ F_TANK_STATUS           = "water_tank_status"
 F_MACHINE_STATUS        = "machine_status"
 
 F_COUNTERS_CHANGED      = "counters_changed"
-F_IC_BITS = "ic_bits"
+F_IC_BITS               = "ic_bits"
 
 # C++ binding
 jura_ns = cg.esphome_ns.namespace("jura")
@@ -109,11 +109,14 @@ CONFIG_SCHEMA = cv.Schema({
         text_sensor.text_sensor_schema(icon=ICON_WATER_CHECK),
     cv.Optional(F_MACHINE_STATUS, default={CONF_NAME: "Machine Status"}):
         text_sensor.text_sensor_schema(icon=ICON_COFFEE_MAKER),
+
     # Debug Sensors
     cv.Optional(F_COUNTERS_CHANGED, default={CONF_NAME: "Changed Counters"}):
-        text_sensor.text_sensor_schema(icon="mdi:format-list-bulleted",entity_category=ENTITY_CATEGORY_DIAGNOSTIC),    
+        text_sensor.text_sensor_schema(icon="mdi:format-list-bulleted",entity_category=ENTITY_CATEGORY_DIAGNOSTIC).extend(
+            {cv.Optional(CONF_DISABLED_BY_DEFAULT, default=True): cv.boolean}),    
     cv.Optional(F_IC_BITS, default={CONF_NAME: "IC Bits"}):
-        text_sensor.text_sensor_schema(icon="mdi:binary",entity_category=ENTITY_CATEGORY_DIAGNOSTIC),
+        text_sensor.text_sensor_schema(icon="mdi:binary",entity_category=ENTITY_CATEGORY_DIAGNOSTIC).extend(
+            {cv.Optional(CONF_DISABLED_BY_DEFAULT, default=True): cv.boolean}),
 }).extend(uart.UART_DEVICE_SCHEMA).extend(cv.polling_component_schema("2s"))
 
 # ---------- MODEL → which fields to expose & which publish keys they map to ----------
@@ -200,6 +203,28 @@ MODEL_MAP = {
             (F_MACHINE_STATUS,        "machine_status"),
             (F_COUNTERS_CHANGED,      "counters_changed"),
             (F_IC_BITS,               "ic_bits"),            
+        ],
+    },
+    "F50": {
+        "numeric": [
+            (F_SINGLE_ESPRESSO,       "counter_2"),
+            (F_DOUBLE_ESPRESSO,       "counter_5"),
+            (F_COFFEE,                "counter_3"),
+            (F_DOUBLE_COFFEE,         "counter_6"),
+            (F_BREWS,                 "counter_8"), # Total brews made (all types), but menu shows different number?
+            (F_CLEANINGS,             "counter_9"),
+            (F_DESCALINGS,            "counter_10"),
+            (F_BREW_MOVEMENTS,        "counter_11"),
+            (F_BREWS_SINCE_DESCALING, "counter_14"),
+            (F_GROUNDS_LEVEL,         "counter_15"),
+            (F_BREWS_SINCE_CLEANING,  "counter_16"),
+        ],
+        "text": [
+            (F_TRAY_STATUS,           "tray_status"),
+            (F_TANK_STATUS,           "water_tank_status"),
+            (F_MACHINE_STATUS,        "machine_status"),
+            (F_COUNTERS_CHANGED,      "counters_changed"),
+            (F_IC_BITS,               "ic_bits"),
         ],
     },
     "UNKNOWN": {
