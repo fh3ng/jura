@@ -22,7 +22,7 @@ These commands control the machine's power state:
 | Command | Description | Verified Models |
 |---------|-------------|-----------------|
 | `AN:01` | Turn machine ON | E6, E8, J6, F7 |
-| `AN:02` | Turn machine OFF | E6, E8, J6, F7 |
+| `AN:02` | Turn machine OFF | F50, E6, E8, J6, F7 |
 
 ## Beverage Commands (FA:XX)
 
@@ -39,15 +39,51 @@ These commands control the machine's power state:
 | `FA:09` | Coffee | Coffee | Coffee | Coffee | Standard coffee |
 
 **Legend:**
+
 - ✓ = Verified working
 - ? = Unknown/Untested
 - Model name = Expected to work based on machine capabilities
+
+## 👌 Jura commands reference Model F50
+
+| Command | Notes | F50 |
+| - | - | - |
+| `AN:01` | Turn machine ON | &cross; |
+| `AN:02` | Turn machine OFF and rinse if needed | &check; |
+| `FA:01` | Switch Off and rinse if needed | &check; |
+| `FA:02` | Does nothing | ? |
+| `FA:03` | Maintenance Menu | &check; |
+| `FA:04` | Turn cold-white light ON OR Menu-Enter | &check; |
+| `FA:05` | Dial CW | &check; |
+| `FA:06` | Dial CCW | &check; |
+| `FA:07` | Single Espresso | &check; |
+| `FA:08` | Double Espresso | &check; |
+| `FA:09` | Single Coffee | &check; |
+| `FA:0A` | Double Coffee | &check; |
+| `FA:0B` | Steam | &check; |
+| `FA:0C` | Hot Water | &cross; |
+
+📄 **Legend:**
+
+- &check; = Verified working
+- &cross; = Verified NOT working
+- ? = Unknown/Untested
+
+### ☕ Machine Status
+
+Machine status is not easy to retrieve. There is no bit clearly indicating Off, On, Standby, Busy
+
+- Stand by after 15 min., when energy saving is activated in menu. Currently no possibility to deactivate this state, because IC bits don't change when heating again.
+- Auto turn off after 1 hour (menu setting) <- Solved
+
+---
 
 ### Beverages Without Known Commands
 
 The following beverages are available on the machine's display but we don't yet have confirmed FA commands:
 
 #### E6 Model
+
 - Americano
 - Macchiato
 - Caffe Barista

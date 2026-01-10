@@ -46,6 +46,7 @@ F_BREWS                 = "brews_performed"
 F_BREW_MOVEMENTS        = "brews_movements_performed"
 F_BREWS_SINCE_CLEANING  = "brews_since_cleaning_performed"
 F_BREWS_SINCE_DESCALING = "brews_since_descaling_performed"
+F_RINSES_SINCE_DESCALING = "rinses_since_descaling_performed"
 F_GROUNDS_LEVEL         = "grounds_level"
 
 F_TRAY_STATUS           = "tray_status"
@@ -97,6 +98,8 @@ CONFIG_SCHEMA = cv.Schema({
         sensor.sensor_schema(unit_of_measurement=UNIT_TIMES, icon=ICON_WATER, accuracy_decimals=0),
     cv.Optional(F_BREWS_SINCE_DESCALING, default={CONF_NAME: "Brews Performed Since Descaling"}):
         sensor.sensor_schema(unit_of_measurement=UNIT_TIMES, icon=ICON_WATER, accuracy_decimals=0),
+    cv.Optional(F_RINSES_SINCE_DESCALING, default={CONF_NAME: "Rinses Performed Since Descaling"}):
+        sensor.sensor_schema(unit_of_measurement=UNIT_TIMES, icon=ICON_WATER, accuracy_decimals=0),
     cv.Optional(F_BREW_MOVEMENTS, default={CONF_NAME: "Brew Movements Performed"}):
         sensor.sensor_schema(unit_of_measurement=UNIT_TIMES, icon=ICON_WATER, accuracy_decimals=0),
     cv.Optional(F_GROUNDS_LEVEL, default={CONF_NAME: "Grounds Level"}):
@@ -115,7 +118,7 @@ CONFIG_SCHEMA = cv.Schema({
         text_sensor.text_sensor_schema(icon="mdi:format-list-bulleted",entity_category=ENTITY_CATEGORY_DIAGNOSTIC).extend(
             {cv.Optional(CONF_DISABLED_BY_DEFAULT, default=True): cv.boolean}),    
     cv.Optional(F_IC_BITS, default={CONF_NAME: "IC Bits"}):
-        text_sensor.text_sensor_schema(icon="mdi:binary",entity_category=ENTITY_CATEGORY_DIAGNOSTIC).extend(
+        text_sensor.text_sensor_schema(icon="mdi:ab-testing",entity_category=ENTITY_CATEGORY_DIAGNOSTIC).extend(
             {cv.Optional(CONF_DISABLED_BY_DEFAULT, default=True): cv.boolean}),
 }).extend(uart.UART_DEVICE_SCHEMA).extend(cv.polling_component_schema("2s"))
 
@@ -207,24 +210,24 @@ MODEL_MAP = {
     },
     "F50": {
         "numeric": [
-            (F_SINGLE_ESPRESSO,       "counter_2"),
-            (F_DOUBLE_ESPRESSO,       "counter_5"),
-            (F_COFFEE,                "counter_3"),
-            (F_DOUBLE_COFFEE,         "counter_6"),
-            (F_BREWS,                 "counter_8"), # Total brews made (all types), but menu shows different number?
-            (F_CLEANINGS,             "counter_9"),
-            (F_DESCALINGS,            "counter_10"),
-            (F_BREW_MOVEMENTS,        "counter_11"),
-            (F_BREWS_SINCE_DESCALING, "counter_14"),
-            (F_GROUNDS_LEVEL,         "counter_15"),
-            (F_BREWS_SINCE_CLEANING,  "counter_16"),
+            (F_SINGLE_ESPRESSO,        "counter_2"),
+            (F_DOUBLE_ESPRESSO,        "counter_5"),
+            (F_COFFEE,                 "counter_3"),
+            (F_DOUBLE_COFFEE,          "counter_6"),
+            (F_RINSES,                 "counter_8"),
+            (F_CLEANINGS,              "counter_9"),
+            (F_DESCALINGS,             "counter_10"),
+            (F_BREW_MOVEMENTS,         "counter_11"),
+            (F_RINSES_SINCE_DESCALING, "counter_14"),
+            (F_GROUNDS_LEVEL,          "counter_15"),
+            (F_BREWS_SINCE_CLEANING,   "counter_16"),
         ],
         "text": [
-            (F_TRAY_STATUS,           "tray_status"),
-            (F_TANK_STATUS,           "water_tank_status"),
-            (F_MACHINE_STATUS,        "machine_status"),
-            (F_COUNTERS_CHANGED,      "counters_changed"),
-            (F_IC_BITS,               "ic_bits"),
+            # (F_TRAY_STATUS,            "tray_status"),
+            # (F_TANK_STATUS,            "water_tank_status"),
+            (F_MACHINE_STATUS,         "machine_status"),
+            (F_COUNTERS_CHANGED,       "counters_changed"),
+            (F_IC_BITS,                "ic_bits"),
         ],
     },
     "UNKNOWN": {

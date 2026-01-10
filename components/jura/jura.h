@@ -68,6 +68,8 @@ class Jura : public PollingComponent, public uart::UARTDevice {
     std::string result = cmd2jura("RT:0000");
     if (result.empty() || result.size() < 64) {
       ESP_LOGW("jura", "Unexpected RT:0000 response len=%d", (int)result.size());
+      // Assume machine is off if we get no valid response
+      publish_text("machine_status", "Off");
       return;
     }
 
@@ -100,20 +102,28 @@ class Jura : public PollingComponent, public uart::UARTDevice {
       byte a = static_cast<byte>(strtol(ic.substr(3,2).c_str(), NULL, 16));
       byte b = static_cast<byte>(strtol(ic.substr(5,2).c_str(), NULL, 16));
 
-      publish_ic_bits_if_changed_(a, b);     
+      bool ic_bits_changed = publish_ic_bits_if_changed_(a, b);     
 
       byte trayBit       = bitRead(a, 4);
       byte left_readyBit = bitRead(a, 2);
-      byte tankBit       = bitRead(b, 5);
-      byte right_busyBit = bitRead(b, 6);
+      byte tankBit       = bitRead(a, 5);
+      // byte right_busyBit = bitRead(b, 6);
 
       std::string tray_status = (trayBit == 1) ? "Present" : "Missing";
       std::string tank_status = (tankBit == 1) ? "Fill Tank" : "OK";
       std::string machine_status = "Ready";
       if (trayBit == 0)       machine_status = "Tray Missing";
       if (tankBit == 1)       machine_status = "Fill Tank";
-      if (right_busyBit == 1) machine_status = "Busy (Milk Drink)";
-      if (left_readyBit == 0) machine_status = "Busy (Coffee Drink)";
+      // if (right_busyBit == 1) machine_status = "Busy (Milk Drink)";
+      if (left_readyBit == 0) machine_status = "Busy";
+      
+      uint32_t now = millis();
+      if (ic_bits_changed) {
+        last_ic_bits_changed_ms_ = now;
+      } else if (now - last_ic_bits_changed_ms_ > 900000) {
+        // No flag changes for 15 minutes, assume machine is stand by
+        machine_status = "Energy Saving";
+      }
 
       publish_text("tray_status",        tray_status);
       publish_text("water_tank_status",  tank_status);
@@ -159,7 +169,7 @@ class Jura : public PollingComponent, public uart::UARTDevice {
       long now  = (i < current.size())       ? current[i]          : -1;
       if (prev != now) {
         if (any) msg += ", ";
-        // "counter_%zu %ld→%ld"
+        // "counter_%u %ld→%ld"
         snprintf(buf, sizeof(buf), "counter_%u %ld\u2192%ld", (unsigned)(i + 1), prev, now);
         msg += buf;
         any = true;
@@ -179,7 +189,7 @@ class Jura : public PollingComponent, public uart::UARTDevice {
     out[8] = '\0';
   }
 
-  void publish_ic_bits_if_changed_(uint8_t a, uint8_t b) {
+  bool publish_ic_bits_if_changed_(uint8_t a, uint8_t b) {
     if (!ic_bits_initialized_ || a != last_ic_a_ || b != last_ic_b_) {
       char abits[9], bbits[9], buf[32];
       byte_to_bits(a, abits);
@@ -192,7 +202,10 @@ class Jura : public PollingComponent, public uart::UARTDevice {
       last_ic_b_ = b;
       ic_bits_initialized_ = true;
   
+      return true;
       ESP_LOGD("jura", "IC bits changed: %s", buf);
+    } else {
+      return false;
     }
   }
 
@@ -206,6 +219,7 @@ class Jura : public PollingComponent, public uart::UARTDevice {
 
   uint8_t last_ic_a_{0};
   uint8_t last_ic_b_{0};
+  uint32_t last_ic_bits_changed_ms_{0}; // millis of last ic bits changed event
   bool ic_bits_initialized_{false};
 };
 
