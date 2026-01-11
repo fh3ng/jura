@@ -111,12 +111,12 @@ class Jura : public PollingComponent, public uart::UARTDevice {
 
       std::string tray_status = (trayBit == 1) ? "Present" : "Missing";
       std::string tank_status = (tankBit == 1) ? "Fill Tank" : "OK";
+      
       std::string machine_status = "Ready";
-      if (trayBit == 0)       machine_status = "Tray Missing";
-      if (tankBit == 1)       machine_status = "Fill Tank";
       // if (right_busyBit == 1) machine_status = "Busy (Milk Drink)";
       if (left_readyBit == 0) machine_status = "Busy";
-      
+      if (trayBit == 0)       machine_status = "Tray Missing";
+      if (tankBit == 1)       machine_status = "Fill Tank";
       uint32_t now = millis();
       if (ic_bits_changed) {
         last_ic_bits_changed_ms_ = now;
